@@ -1,0 +1,126 @@
+{
+    "name": "Segmentation_Nuclick",
+    "description": "Segmentation using NuClick model.",
+    "schema-version": "cytomine-0.1",
+    "command-line": "python run.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE CYTOMINE_ID_IMAGES THRESHOLD MIN_SIZE AREA_THRESHOLD TYPE",
+    "inputs": [
+        {
+            "id": "cytomine_host",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine host",
+            "set-by-server": true,
+            "optional": false,
+            "type": "String"
+        },
+        {
+            "id": "cytomine_public_key",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine public key",
+            "set-by-server": true,
+            "optional": false,
+            "type": "String"
+        },
+        {
+            "id": "cytomine_private_key",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine private key",
+            "set-by-server": true,
+            "optional": false,
+            "type": "String"
+        },
+        {
+            "id": "cytomine_id_project",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine project ID",
+            "set-by-server": true,
+            "optional": false,
+            "type": "Number"
+        },
+        {
+            "id": "cytomine_id_software",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine software ID",
+            "set-by-server": true,
+            "optional": false,
+            "type": "Number"
+        },
+        {
+            "id": "cytomine_id_images",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine Image IDs",
+            "description": "Images on which to detect objects",
+            "set-by-server": false,
+            "optional": false,
+            "type": "ListDomain",
+            "uri": "/api/project/$currentProject$/imageinstance.json",
+            "uri-print-attribute": "instanceFilename",
+            "uri-sort-attribute": "instanceFilename"
+        },
+        {
+            "id": "roi_id_term",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Cytomine ROI term ID",
+            "description": "Region of interest",
+            "set-by-server": false,
+            "optional": false,
+            "type": "Number"
+        },
+        {
+            "id": "threshold",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Post-processing threshold",
+            "description": "Remove all predicted pixel with a confidence lower than the threshold.",
+            "default-value": 0.5,
+            "set-by-server": false,
+            "optional": true,
+            "type": "Number"
+        },
+        {
+            "id": "min_size",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Post-processing mininum size removal",
+            "description": "Remove group of predicted pixels with a size smaller than min_size.",
+            "default-value": 100,
+            "set-by-server": false,
+            "optional": true,
+            "type": "Number"
+        },
+        {
+            "id": "area_threshold",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Post-processing holes filling",
+            "description": "Fill all holes smaller than area_threshold.",
+            "default-value": 300,
+            "set-by-server": false,
+            "optional": true,
+            "type": "Number"
+        },
+        {
+            "id": "type",
+            "value-key": "@ID",
+            "command-line-flag": "--@id",
+            "name": "Type of object",
+            "description": "The type of object to detect.",
+            "value-choices": [
+                "bronchus",
+                "inflammation",
+                "gland",
+                "infiltration",
+                "tumor"
+            ],
+            "set-by-server": false,
+            "optional": false,
+            "type": "String"
+        }
+    ]
+}
