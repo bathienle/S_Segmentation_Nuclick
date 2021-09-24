@@ -52,6 +52,17 @@ def load_model(filename):
     return model
 
 
+def predict(model, image):
+    shape = (image.shape[0], 2, image.shape[2], image.shape[3])
+    signal = torch.zeros(shape, device=image.device)
+    inputs = torch.cat([image, signal], dim=1)
+
+    with torch.no_grad():
+        preds = model(inputs)
+
+    return preds
+
+
 def main(argv):
     with CytomineJob.from_cli(argv) as cj:
         cj.job.update(progress=0, statusComment="Initialisation")
@@ -98,8 +109,7 @@ def main(argv):
             image = to_tensor(Image.open(path))
 
             # Predictions
-            with torch.no_grad():
-                preds = model(image.unsqueeze(0))
+            preds = predict(model, image.unsqueeze(0))
 
             masks = post_process(
                 preds,
