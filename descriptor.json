@@ -1,5 +1,9 @@
 {
     "name": "Segmentation_Nuclick",
+    "container-image": {
+        "image": "bathienle/s_segmentation_nuclick",
+        "type": "singularity"
+    },
     "description": "Segmentation using NuClick model.",
     "schema-version": "cytomine-0.1",
     "command-line": "python run.py CYTOMINE_HOST CYTOMINE_PUBLIC_KEY CYTOMINE_PRIVATE_KEY CYTOMINE_ID_PROJECT CYTOMINE_ID_SOFTWARE CYTOMINE_ID_IMAGES THRESHOLD MIN_SIZE AREA_THRESHOLD TYPE",
