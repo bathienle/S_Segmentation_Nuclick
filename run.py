@@ -20,7 +20,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import cv2
-from shapely.wkt import load
+import numpy as np
 import torch
 import os
 
@@ -30,7 +30,7 @@ from PIL import Image
 from shapely.affinity import affine_transform
 from shapely.geometry import Polygon
 
-from torchvision.transforms.functional import to_tensor
+from torchvision.transforms.functional import to_tensor, resize
 
 from cytomine import CytomineJob
 from cytomine.models import Annotation, AnnotationCollection
@@ -39,6 +39,14 @@ from src import NuClick, post_process
 
 
 __author__ = "LE Ba Thien <ba.le@uliege.be>"
+
+
+def to_uint8(array):
+    if isinstance(array, torch.Tensor):
+        return (array * 255).type(torch.uint8).numpy()
+
+    if isinstance(array, np.ndarray):
+        return (array * 255).astype(np.uint8)
 
 
 def load_model(filename):
@@ -103,10 +111,10 @@ def main(argv):
         cj.job.update(progress=40, statusComment="Fetch the ROIs")
 
         # Predict the object inside the ROI
-        annotations = []
+        annotations = AnnotationCollection()
         for image_id, path in paths:
             # Open the ROI image
-            image = to_tensor(Image.open(path))
+            image = to_tensor(resize(Image.open(path), (512, 512)))
 
             # Predictions
             preds = predict(model, image.unsqueeze(0))
@@ -117,21 +125,25 @@ def main(argv):
                 area_threshold=cj.parameters.area_threshold
             )
 
+            masks = to_uint8(masks.squeeze(0).permute(1, 2, 0))
+
             contours, _ = cv2.findContours(
                 masks,
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_SIMPLE
             )
+
             contours = [c for c in contours if cv2.contourArea(c) > 100]
 
             for c in contours:
                 mask = Polygon(c)
-                annotation = Annotation(
-                    location=mask.wkt,
-                    id_image=image_id,
-                    id_project=cj.parameters.cytomine_id_project
+                annotations.append(
+                    Annotation(
+                        location=mask.wkt,
+                        id_image=image_id,
+                        id_project=cj.parameters.cytomine_id_project
+                    )
                 )
-                annotations.append(annotation)
 
         cj.job.update(progress=90, statusComment="Predictions done")
 
