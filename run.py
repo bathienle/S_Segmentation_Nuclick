@@ -27,7 +27,7 @@ import os
 from pathlib import Path
 from PIL import Image
 
-from shapely.affinity import affine_transform
+from shapely import wkt
 from shapely.geometry import Polygon
 
 from torchvision.transforms.functional import to_tensor, resize
@@ -92,6 +92,7 @@ def main(argv):
 
         # Get the ROIs
         paths = []
+        offsets = []
         for image in images:
             roi_annotations = AnnotationCollection(
                 project=cj.parameters.cytomine_id_project,
@@ -106,13 +107,17 @@ def main(argv):
                 filename = f'{roi.image}-{roi.id}.png'
                 filepath = os.path.join(images_path, filename)
                 roi.dump(dest_pattern=filepath)
+
                 paths.append((roi.image, filepath))
+
+                bbox = wkt.loads(roi.location).bounds
+                offsets.append((bbox[0], bbox[3]))
 
         cj.job.update(progress=40, statusComment="Fetch the ROIs")
 
         # Predict the object inside the ROI
         annotations = AnnotationCollection()
-        for image_id, path in paths:
+        for (image_id, path), (min_x, min_y) in zip(paths, offsets):
             # Open the ROI image
             image = to_tensor(resize(Image.open(path), (512, 512)))
 
@@ -124,7 +129,6 @@ def main(argv):
                 min_size=cj.parameters.min_size,
                 area_threshold=cj.parameters.area_threshold
             )
-
             masks = to_uint8(masks.squeeze(0).permute(1, 2, 0))
 
             contours, _ = cv2.findContours(
@@ -133,9 +137,12 @@ def main(argv):
                 cv2.CHAIN_APPROX_SIMPLE
             )
 
-            contours = [c for c in contours if cv2.contourArea(c) > 100]
-
+            contours = map(np.squeeze, contours)
             for c in contours:
+                # Add offset to have the correct coords
+                c[:, 0] += int(min_x)
+                c[:, 1] = int(min_y) - c[:, 1]
+
                 mask = Polygon(c)
                 annotations.append(
                     Annotation(
